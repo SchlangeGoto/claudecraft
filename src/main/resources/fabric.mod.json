@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "claudecraft",
+  "version": "${version}",
+  "name": "claudecraft",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/claudecraft/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-datagen": [
+      "dev.kkazi.claudecraft.client.ClaudeCraftDataGenerator"
+    ],
+    "client": [
+      "dev.kkazi.claudecraft.client.ClaudeCraftClient"
+    ],
+    "main": [
+      "dev.kkazi.claudecraft.ClaudeCraft"
+    ]
+  },
+  "mixins": [
+    "claudecraft.mixins.json",
+    {
+      "config": "claudecraft.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
