@@ -40,6 +40,13 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    //WebSocket Server
+    implementation('org.java-websocket:Java-WebSocket:1.5.4') {
+        exclude group: 'org.slf4j' // avoid conflicts
+    }
+    // Shadow/bundle it into your mod jar:
+    include 'org.java-websocket:Java-WebSocket:1.5.4' // Fabric + Architectury
 }
 
 processResources {
