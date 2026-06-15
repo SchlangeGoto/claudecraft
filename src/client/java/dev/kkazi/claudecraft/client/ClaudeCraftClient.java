@@ -68,10 +68,15 @@ public class ClaudeCraftClient implements ClientModInitializer {
     }
 
     private void sendToRust(String text) {
-        // Use the same format as ClawBridgeServer
-        ObjectNode msg = JSON.createObjectNode();
-        msg.put("type", "input");
-        msg.put("text", text);
-        ClaudeCraftClient.wsServer.setRustChannel(null);
+        try {
+            ObjectNode msg = JSON.createObjectNode();
+            msg.put("type", "input");
+            msg.put("text", text);
+
+            String jsonString = JSON.writeValueAsString(msg);
+            ClaudeCraftClient.wsServer.sendMessage(jsonString);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
