@@ -1,28 +1,27 @@
 package dev.kkazi.claudecraft.client;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
+import com.mojang.authlib.minecraft.client.MinecraftClient;
 import dev.kkazi.claudecraft.client.socketServer.NettyWebSocketServer;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.minecraft.client.Minecraft;
 
 public class ClaudeCraftClient implements ClientModInitializer {
     public static NettyWebSocketServer wsServer;
     public static boolean claudeMode = false;
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     @Override
     public void onInitializeClient() {
-        wsServer = new NettyWebSocketServer(8887);
+        wsServer = new NettyWebSocketServer(8765);
+
 
         try {
             wsServer.start();
@@ -40,6 +39,7 @@ public class ClaudeCraftClient implements ClientModInitializer {
                 claudeMode = true;
 
                 if (claudeMode) {
+                    Minecraft.getInstance().player.sendOverlayMessage(Component.literal("Claude Mode is enabled."));
                     context.getSource().sendSuccess(() -> Component.literal("Claude Mode is enabled."), false);
                     return 1;
                 } else {
@@ -49,57 +49,29 @@ public class ClaudeCraftClient implements ClientModInitializer {
             }));
         });
 
-        // Intercept chat messages
-        ServerTickEvents.END_SERVER_TICK.register(server -> {}); // keeps server reference alive
+        // Intercept chat BEFORE it's sent to the server
+        ClientSendMessageEvents.ALLOW_CHAT.register((message) -> {
+            if (!claudeMode) return true; // allow normally
 
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {});
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal(message.toString()));
 
-        // This fires before the message is sent to chat
-        ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, params) -> {
-            if (claudeMode) {
-                String text = message.decoratedContent().getString();
-                String playerName = sender.getName().getString();
-
-                if (text.equalsIgnoreCase("quit")) {
-                    claudeMode = false;
-                    sender.sendSystemMessage(Component.literal("Claude mode OFF"));
-                    return false; // block "quit" from appearing in chat
-                }
-
-                writeToJson(playerName, text);
-                return false; // blocks the message from appearing in chat
+            if (message.equalsIgnoreCase("quit")) {
+                claudeMode = false;
+                Minecraft.getInstance().player.sendOverlayMessage(Component.literal("Claude Mode OFF"));
+                return false; // block "quit" from being sent
             }
-            return true; // allow normally
+
+            // Send to Rust via WebSocket
+            sendToRust(message);
+            return false; // block from being sent to server
         });
     }
 
-    private void writeToJson(String player, String message) {
-        try {
-            // Read existing file or start fresh
-            File file = new File("claude_chat.json");
-            JsonArray array = new JsonArray();
-
-            if (file.exists()) {
-                JsonElement existing = JsonParser.parseReader(new FileReader(file));
-                if (existing.isJsonArray()) {
-                    array = existing.getAsJsonArray();
-                }
-            }
-
-            // Add new entry
-            JsonObject entry = new JsonObject();
-            entry.addProperty("player", player);
-            entry.addProperty("message", message);
-            entry.addProperty("timestamp", System.currentTimeMillis());
-            array.add(entry);
-
-            // Write back to file
-            try (FileWriter writer = new FileWriter(file)) {
-                writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(array));
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void sendToRust(String text) {
+        // Use the same format as ClawBridgeServer
+        ObjectNode msg = JSON.createObjectNode();
+        msg.put("type", "input");
+        msg.put("text", text);
+        ClaudeCraftClient.wsServer.setRustChannel(null);
     }
 }

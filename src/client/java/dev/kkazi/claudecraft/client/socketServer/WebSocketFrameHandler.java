@@ -1,5 +1,6 @@
 package dev.kkazi.claudecraft.client.socketServer;
 
+import dev.kkazi.claudecraft.client.ClaudeCraftClient;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -15,11 +16,13 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<TextWebSo
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {
-        System.out.println("[WS] Client connected: " + ctx.channel().remoteAddress());
+        System.out.println("[WS] Rust connected: " + ctx.channel().remoteAddress());
+        ClaudeCraftClient.wsServer.setRustChannel(ctx.channel());
     }
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) {
-        System.out.println("[WS] Client disconnected");
+        System.out.println("[WS] Rust disconnected");
+        ClaudeCraftClient.wsServer.setRustChannel(null);
     }
 }

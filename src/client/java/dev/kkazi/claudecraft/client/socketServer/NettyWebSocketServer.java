@@ -6,9 +6,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 
 public class NettyWebSocketServer {
+
+    private Channel rustChannel;
 
     private final int port;
     private Channel serverChannel;           // represents the server's open port
@@ -54,5 +57,16 @@ public class NettyWebSocketServer {
             workerGroup.shutdownGracefully(); // shuts down the client handler threads
         }
         System.out.println("[WS] WebSocket server stopped");
+    }
+
+    // Call this from WebSocketFrameHandler when a client connects
+    public void setRustChannel(Channel channel) {
+        this.rustChannel = channel;
+    }
+
+    public void sendMessage(String json) {
+        if (rustChannel != null && rustChannel.isOpen()) {
+            rustChannel.writeAndFlush(new TextWebSocketFrame(json));
+        }
     }
 }

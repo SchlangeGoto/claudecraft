@@ -47,6 +47,12 @@ dependencies {
     }
     // Shadow/bundle it into your mod jar:
     include 'org.java-websocket:Java-WebSocket:1.5.4' // Fabric + Architectury
+
+    //Claw Bridge-Server
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+    include 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+    include 'com.fasterxml.jackson.core:jackson-core:2.17.1'
+    include 'com.fasterxml.jackson.core:jackson-annotations:2.17.1'
 }
 
 processResources {
