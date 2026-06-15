@@ -7,6 +7,7 @@ import dev.kkazi.claudecraft.client.ClaudeCraftClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class ClientToolExecutor {
@@ -35,13 +36,25 @@ public class ClientToolExecutor {
                 sendResponse(true, "Dispatched setblock command successfully.");
 
             } else if ("scan_region".equals(toolName)) {
+                int minX = 0;
+                int minY = 0;
+                int minZ = 0;
+                int maxX = 0;
+                int maxY = 0;
+                int maxZ = 0;
+
                 // Read from local client-cached blocks directly
-                int minX = input.get("min_x").asInt();
-                int minY = input.get("min_y").asInt();
-                int minZ = input.get("min_z").asInt();
-                int maxX = input.get("max_x").asInt();
-                int maxY = input.get("max_y").asInt();
-                int maxZ = input.get("max_z").asInt();
+                try {
+                    minX = input.get("min_x").asInt();
+                    minY = input.get("min_y").asInt();
+                    minZ = input.get("min_z").asInt();
+                    maxX = input.get("max_x").asInt();
+                    maxY = input.get("max_y").asInt();
+                    maxZ = input.get("max_z").asInt();
+                } catch (Exception e) {
+                    Minecraft.getInstance().player.sendSystemMessage(Component.literal("Error when reading the scan_region specfications with the message: " + e.getMessage()));
+                    throw new Exception("Error when reading the scan_region specfications with the message: " + e.getMessage(), e);
+                }
 
                 ClientLevel level = client.level;
                 StringBuilder worldData = new StringBuilder();

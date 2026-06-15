@@ -2,7 +2,6 @@ package dev.kkazi.claudecraft.client;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
-import com.mojang.authlib.minecraft.client.MinecraftClient;
 import dev.kkazi.claudecraft.client.socketServer.NettyWebSocketServer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
@@ -44,6 +43,21 @@ public class ClaudeCraftClient implements ClientModInitializer {
                     return 1;
                 } else {
                     context.getSource().sendSuccess(() -> Component.literal("Claude Mode failed"), false);
+                    return -1;
+                }
+            }));
+        });
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            dispatcher.register(Commands.literal("exit").executes(context -> {
+                claudeMode = false;
+
+                if (!claudeMode) {
+                    Minecraft.getInstance().player.sendOverlayMessage(Component.literal("Claude Mode OFF."));
+                    context.getSource().sendSuccess(() -> Component.literal("Claude Mode OFF."), false);
+                    return 1;
+                } else {
+                    context.getSource().sendSuccess(() -> Component.literal("Claude Mode failed to turn off."), false);
                     return -1;
                 }
             }));
