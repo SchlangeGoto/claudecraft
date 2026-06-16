@@ -11,8 +11,6 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 
 public class NettyWebSocketServer {
 
-    private Channel rustChannel;
-
     private final int port;
     private Channel serverChannel;           // represents the server's open port
     private EventLoopGroup bossGroup;        // thread that accepts new connections
@@ -61,12 +59,12 @@ public class NettyWebSocketServer {
 
     // Call this from WebSocketFrameHandler when a client connects
     public void setRustChannel(Channel channel) {
-        this.rustChannel = channel;
+        this.serverChannel = channel;
     }
 
     public void sendMessage(String json) {
-        if (rustChannel != null && rustChannel.isOpen()) {
-            rustChannel.writeAndFlush(new TextWebSocketFrame(json));
+        if (serverChannel != null && serverChannel.isOpen()) {
+            serverChannel.writeAndFlush(new TextWebSocketFrame(json));
         }
     }
 }

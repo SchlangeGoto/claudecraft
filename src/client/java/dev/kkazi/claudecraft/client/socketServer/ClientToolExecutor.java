@@ -21,17 +21,63 @@ public class ClientToolExecutor {
         }
 
         try {
-            if ("set_block".equals(toolName)) {
-                int x = input.get("x").asInt();
-                int y = input.get("y").asInt();
-                int z = input.get("z").asInt();
-                String blockType = input.get("block_type").asText();
+            if ("batch_blocks".equals(toolName)) {
+                int x = 0, y = 0, z = 0;
+                //get the origin and set x,y,z to it
+                JsonNode originNode = input.get("origin");
+                if (originNode != null && originNode.isArray() && originNode.size() == 3) {
+                    x = originNode.get(0).asInt();
+                    y = originNode.get(1).asInt();
+                    z = originNode.get(2).asInt();
+                }
+                JsonNode blocksNode = input.get("blocks");
+                if (blocksNode == null || !blocksNode.isArray()) {
+                    sendResponse(false, "Error: Blocks are not in a list.");
+                    return;
+                }
 
-                // Format the command string out loud exactly like a player manual input
-                String command = String.format("setblock %d %d %d %s", x, y, z, blockType);
+                for (JsonNode blockNode : blocksNode) {
+                    String block = blockNode.asText();
+                    if (block.startsWith("FILL")) {
+                        String blockName = "minecraft:" + block.substring(5, block.charAt(':'));
+                        block = block.substring(block.indexOf(':') + 1);
+                        String[] parts = block.split("[,:;]");
+                        int x1 = x + Integer.parseInt(parts[0]);
+                        int y1 = y + Integer.parseInt(parts[1]);
+                        int z1 = z + Integer.parseInt(parts[2]);
+                        int x2 = x + Integer.parseInt(parts[3]);
+                        int y2 = y + Integer.parseInt(parts[4]);
+                        int z2 = z + Integer.parseInt(parts[5]);
+                        String props = "[";
+                        if (parts.length > 6){
+                            for (int i = 0; i < parts.length-6; i++) {
+                                props += parts[i+6];
+                                if(i+7 != parts.length) props += ",";
+                            }
+                        }
+                        props += "]";
+                        String command = String.format("fill %d %d %d %d %d %d %s%s", x1, y1, z1, x2, y2, z2, blockName, props);
 
-                // Force client connection to execute the command string to server
-                client.player.connection.sendCommand(command);
+                        client.player.connection.sendCommand(command);
+                    } else {
+                        String[] parts = block.split("[,:;]");
+                        String blockName = "minecraft:" + parts[0];
+                        int x1 = x + Integer.parseInt(parts[1]);
+                        int y1 = y + Integer.parseInt(parts[2]);
+                        int z1 = z + Integer.parseInt(parts[3]);
+                        String props = "[";
+                        if (parts.length > 4){
+                            for (int i = 0; i < parts.length-4; i++) {
+                                props += parts[i+4];
+                                if(i+5!= parts.length) props += ",";
+                            }
+                        }
+                        props += "]";
+                        String command = String.format("setblock %d %d %d %s%s", x1, y1, z1, blockName, props);
+
+                        client.player.connection.sendCommand(command);
+                    }
+                }
 
                 sendResponse(true, "Dispatched setblock command successfully.");
 
@@ -45,12 +91,12 @@ public class ClientToolExecutor {
 
                 // Read from local client-cached blocks directly
                 try {
-                    minX = input.get("min_x").asInt();
-                    minY = input.get("min_y").asInt();
-                    minZ = input.get("min_z").asInt();
-                    maxX = input.get("max_x").asInt();
-                    maxY = input.get("max_y").asInt();
-                    maxZ = input.get("max_z").asInt();
+                    minX = input.get("x1").asInt();
+                    minY = input.get("y1").asInt();
+                    minZ = input.get("z1").asInt();
+                    maxX = input.get("x2").asInt();
+                    maxY = input.get("y2").asInt();
+                    maxZ = input.get("z2").asInt();
                 } catch (Exception e) {
                     Minecraft.getInstance().player.sendSystemMessage(Component.literal("Error when reading the scan_region specfications with the message: " + e.getMessage()));
                     throw new Exception("Error when reading the scan_region specfications with the message: " + e.getMessage(), e);
@@ -64,12 +110,12 @@ public class ClientToolExecutor {
                         for (int z = minZ; z <= maxZ; z++) {
                             BlockPos pos = new BlockPos(x, y, z);
                             BlockState state = level.getBlockState(pos);
-                            String blockName = state.getBlock().toString(); // e.g. "Block{minecraft:stone}"
+                            String blockName = state.getBlock().toString().substring(10); // removes the "minecraft:" parte.g. "Block{stone}"
 
                             // Clean up name string formatting
                             blockName = blockName.replace("Block{", "").replace("}", "");
 
-                            if (!blockName.equals("minecraft:air")) {
+                            if (!blockName.equals("air")) {
                                 worldData.append(String.format("[%d,%d,%d -> %s] ", x, y, z, blockName));
                             }
                         }
