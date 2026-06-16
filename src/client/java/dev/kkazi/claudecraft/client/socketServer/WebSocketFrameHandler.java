@@ -33,7 +33,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<TextWebSo
                 String text = root.get("text").asText();
                 Minecraft.getInstance().execute(() -> {
                     if (Minecraft.getInstance().player != null) {
-                        Minecraft.getInstance().player.sendSystemMessage(Component.literal("§6Claude>§r " + text));
+                        Minecraft.getInstance().player.sendSystemMessage(Component.literal("§6Claude§r " + text));
                     }
                 });
             } else if ("error".equals(type)) {

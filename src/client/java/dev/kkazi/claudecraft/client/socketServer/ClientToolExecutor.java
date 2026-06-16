@@ -39,7 +39,7 @@ public class ClientToolExecutor {
                 for (JsonNode blockNode : blocksNode) {
                     String block = blockNode.asText();
                     if (block.startsWith("FILL")) {
-                        String blockName = "minecraft:" + block.substring(5, block.charAt(':'));
+                        String blockName = "minecraft:" + block.substring(5, block.indexOf(':'));
                         block = block.substring(block.indexOf(':') + 1);
                         String[] parts = block.split("[,:;]");
                         int x1 = x + Integer.parseInt(parts[0]);
