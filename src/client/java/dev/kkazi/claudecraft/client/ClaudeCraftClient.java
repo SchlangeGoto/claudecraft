@@ -16,6 +16,8 @@ public class ClaudeCraftClient implements ClientModInitializer {
     public static boolean claudeMode = false;
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     @Override
     public void onInitializeClient() {
         wsServer = new NettyWebSocketServer(8765);
@@ -36,14 +38,19 @@ public class ClaudeCraftClient implements ClientModInitializer {
             dispatcher.register(Commands.literal("claude").executes(context -> {
                 claudeMode = true;
 
-                if (claudeMode) {
-                    Minecraft.getInstance().player.sendOverlayMessage(Component.literal("Claude Mode is enabled."));
-                    context.getSource().sendSuccess(() -> Component.literal("Claude Mode is enabled."), false);
-                    return 1;
-                } else {
-                    context.getSource().sendSuccess(() -> Component.literal("Claude Mode failed"), false);
-                    return -1;
-                }
+                Minecraft.getInstance().player.sendOverlayMessage(Component.literal("Claude Mode is enabled."));
+                context.getSource().sendSuccess(() -> Component.literal("Claude Mode is enabled."), false);
+                return 1;
+            }));
+        });
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            dispatcher.register(Commands.literal("quit").executes(context -> {
+                claudeMode = false;
+
+                Minecraft.getInstance().player.sendOverlayMessage(Component.literal("Claude Mode is disabled."));
+                context.getSource().sendSuccess(() -> Component.literal("Claude Mode is disabled."), false);
+                return 1;
             }));
         });
 
@@ -51,14 +58,22 @@ public class ClaudeCraftClient implements ClientModInitializer {
             dispatcher.register(Commands.literal("exit").executes(context -> {
                 claudeMode = false;
 
-                if (!claudeMode) {
-                    Minecraft.getInstance().player.sendOverlayMessage(Component.literal("Claude Mode OFF."));
-                    context.getSource().sendSuccess(() -> Component.literal("Claude Mode OFF."), false);
-                    return 1;
-                } else {
-                    context.getSource().sendSuccess(() -> Component.literal("Claude Mode failed to turn off."), false);
-                    return -1;
-                }
+                Minecraft.getInstance().player.sendOverlayMessage(Component.literal("Closed Claude session"));
+                context.getSource().sendSuccess(() -> Component.literal("Closed Claude session"), false);
+                //TODO: complete code for exiting the Claude Chat
+                /*
+                try {
+                    ObjectNode responseNode = MAPPER.createObjectNode();
+                    responseNode.put("type", "tool_response");
+                    responseNode.put("success", "");
+                    responseNode.put("output", "");
+
+                    String rawJson = MAPPER.writeValueAsString(responseNode);
+                    wsServer.sendMessage(rawJson);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }*/
+                return 1;
             }));
         });
 
@@ -67,13 +82,6 @@ public class ClaudeCraftClient implements ClientModInitializer {
             if (!claudeMode) return true; // allow normally
 
             Minecraft.getInstance().player.sendSystemMessage(Component.literal(message.toString()));
-
-            if (message.equalsIgnoreCase("quit")) {
-                claudeMode = false;
-                Minecraft.getInstance().player.sendOverlayMessage(Component.literal("Claude Mode OFF"));
-                return false; // block "quit" from being sent
-            }
-
             // Send to Rust via WebSocket
             sendToRust(message);
             return false; // block from being sent to server
