@@ -1,4 +1,4 @@
-package dev.kkazi.claudecraft.client.socketServer;
+package dev.kkazi.claudecraft.client.socketserver;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +27,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<TextWebSo
 
                 // Netty runs on a separate thread! Hand execution over to Minecraft's client thread safely.
                 Minecraft.getInstance().execute(() -> {
-                    handleClientTool(toolName, inputNode);
+                    ClientToolExecutor.dispatch(toolName, inputNode);
                 });
 
             } else if ("output".equals(type)) {
@@ -50,10 +50,6 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<TextWebSo
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private void handleClientTool(String name, JsonNode input) {
-        ClientToolExecutor.dispatch(name, input);
     }
 
     @Override

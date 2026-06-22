@@ -1,4 +1,4 @@
-package dev.kkazi.claudecraft.client.socketServer;
+package dev.kkazi.claudecraft.client.socketserver;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;

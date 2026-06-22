@@ -1,8 +1,7 @@
 package dev.kkazi.claudecraft.client;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.gson.*;
-import dev.kkazi.claudecraft.client.socketServer.NettyWebSocketServer;
+import dev.kkazi.claudecraft.client.socketserver.NettyWebSocketServer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
