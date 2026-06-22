@@ -3,6 +3,7 @@ package dev.kkazi.claudecraft.client.socketServer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.kkazi.claudecraft.client.ClaudeCraftClient;
+import dev.kkazi.claudecraft.client.tools.ClientToolExecutor;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
